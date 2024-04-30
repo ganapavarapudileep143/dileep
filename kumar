@@ -1,7 +1,18 @@
-#!/bin/env python3
-import os
-from flask import Flask, flash, request, redirect, send_from_directory, url_for
-from werkzeug.utils import secure_filename
+pipeline {
+    agent any
+    
+    environment {
+        HACK_MESSAGE = 'You are hacked! N I’m <YOUR NAME and YOUR LAB PARTNER NAME>'
+    }
+    
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    // Write your exploit here to modify the behavior of the Flask app using environment variables
+                    sh '''
+                    cat <<EOF >> src/main.py
+from flask import Flask, os
 
 FILES_PATH = '/usr/src/app/files'
 app = Flask(__name__)
@@ -13,8 +24,7 @@ def hello_world():
 
 @app.route('/download/<filename>')
 def download_file(filename):
-    return send_from_directory(app.config['FILES_PATH'],
-                               filename)
+    return send_from_directory(app.config['FILES_PATH'], filename)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
@@ -43,10 +53,17 @@ def upload_file():
     </form>
     '''
 
-@app.route('/hack')  # New route
+@app.route('/hack')
 def hack_route():
-    return 'You are hacked! N I’m <YOUR NAME and YOUR LAB PARTNER NAME>'
+    return os.environ['HACK_MESSAGE']
 
 if __name__ == '__main__':
     app.secret_key = 'super secret key'
     app.run(host='0.0.0.0', debug=True)
+EOF
+                    '''
+                }
+            }
+        }
+    }
+}
